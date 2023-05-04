@@ -29,16 +29,16 @@ public:
     {
         static ChatCommandTable recruitCommandTable =
         {
-            { "accept", HandleRecruitAcceptCommand, SEC_PLAYER, Console::No },
-            { "decline", HandleRecruitDeclineCommand, SEC_PLAYER, Console::No },
-            { "friend", HandleRecruitFriendCommand, SEC_PLAYER, Console::No },
-            { "help", HandleRecruitHelpCommand, SEC_PLAYER, Console::No },
-            { "status", HandleRecruitStatusCommand, SEC_PLAYER, Console::No },
+            { "aceptar", HandleRecruitAcceptCommand, SEC_PLAYER, Console::No },
+            { "declinar", HandleRecruitDeclineCommand, SEC_PLAYER, Console::No },
+            { "amigo", HandleRecruitFriendCommand, SEC_PLAYER, Console::No },
+            { "ayuda", HandleRecruitHelpCommand, SEC_PLAYER, Console::No },
+            { "estado", HandleRecruitStatusCommand, SEC_PLAYER, Console::No },
         };
 
         static ChatCommandTable commandTable =
         {
-            { "recruit", recruitCommandTable }
+            { "reclutar", recruitCommandTable }
         };
 
         return commandTable;
@@ -59,12 +59,12 @@ public:
             LoginDatabase.Execute("DELETE FROM `recruit_a_friend_accounts` WHERE `account_id` = {} AND `status` = {}", accountId, STATUS_REFERRAL_PENDING);
             LoginDatabase.Execute("UPDATE `account` SET `recruiter` = {} WHERE `id` = {}", recruiterId, accountId);
             LoginDatabase.Execute("INSERT INTO `recruit_a_friend_accounts` (`account_id`, `recruiter_id`, `status`) VALUES ({}, {}, {})", accountId, recruiterId, STATUS_REFERRAL_ACTIVE);
-            ChatHandler(handler->GetSession()).SendSysMessage("You have |cff4CFF00accepted|r the referral request.");
-            ChatHandler(handler->GetSession()).SendSysMessage("You have to log out and back in for the changes to take effect.");
+            ChatHandler(handler->GetSession()).SendSysMessage("Has |cff4CFF00aceptado|r la solicitud de reclutamiento.");
+            ChatHandler(handler->GetSession()).SendSysMessage("Tienes que cerrar la sesión y volver a iniciarla para que los cambios surtan efecto.");
             return true;
         }
 
-        ChatHandler(handler->GetSession()).SendSysMessage("You don't have a pending referral request.");
+        ChatHandler(handler->GetSession()).SendSysMessage("No tiene una solicitud de reclutamiento pendiente.");
         return true;
     }
 
@@ -76,11 +76,11 @@ public:
         if (result)
         {
             LoginDatabase.Execute("DELETE FROM `recruit_a_friend_accounts` WHERE `account_id` = {} AND `status` = {}", recruitedAccountId, STATUS_REFERRAL_PENDING);
-            ChatHandler(handler->GetSession()).SendSysMessage("You have |cffFF0000declined|r the referral request.");
+            ChatHandler(handler->GetSession()).SendSysMessage("Has |cffFF0000declinado|r la solicitud de reclutamiento.");
             return true;
         }
 
-        ChatHandler(handler->GetSession()).SendSysMessage("You don't have a pending referral request.");
+        ChatHandler(handler->GetSession()).SendSysMessage("No tiene una solicitud de reclutamiento pendiente.");
         return true;
     }
 
@@ -95,7 +95,7 @@ public:
 
         if (handler->GetSession()->GetSecurity() != SEC_PLAYER)
         {
-            ChatHandler(handler->GetSession()).SendSysMessage("You can't recruit a player because you're a |cffFF0000gamemaster|r!");
+            ChatHandler(handler->GetSession()).SendSysMessage("No podes reclutar un jugador porque sos un |cffFF0000GM|r!");
             return true;
         }
 
@@ -104,7 +104,7 @@ public:
 
         if (recruiterAccountId == recruitedAccountId)
         {
-            ChatHandler(handler->GetSession()).SendSysMessage("You can't recruit |cffFF0000yourself|r!");
+            ChatHandler(handler->GetSession()).SendSysMessage("No puedes reclutarte a ti |cffFF0000mismo|r!");
             return true;
         }
 
@@ -112,60 +112,60 @@ public:
         if (referralStatus > 0)
         {
             if (referralStatus == STATUS_REFERRAL_PENDING)
-                ChatHandler(handler->GetSession()).SendSysMessage("A referral of that account is currently |cffFF0000pending|r.");
+                ChatHandler(handler->GetSession()).SendSysMessage("Un reclutamiento de esa cuenta esta actualmente |cffFF0000pendiente|r.");
             else if (referralStatus == STATUS_REFERRAL_ACTIVE)
-                ChatHandler(handler->GetSession()).SendSysMessage("A referral of that account is currently |cff4CFF00active|r.");
+                ChatHandler(handler->GetSession()).SendSysMessage("Un reclutamiento de esa cuenta esta actualmente |cff4CFF00activo|r.");
             else
-                ChatHandler(handler->GetSession()).SendSysMessage("A referral of that account has |cffFF0000expired|r.");
+                ChatHandler(handler->GetSession()).SendSysMessage("Un reclutamiento de esa cuenta esta |cffFF0000expirado|r.");
 
             return true;
         }
 
         if (WhoRecruited(recruiterAccountId) == recruitedAccountId)
         {
-            ChatHandler(handler->GetSession()).PSendSysMessage("You can't recruit |cff4CFF00%s|r because they referred you.", target->GetConnectedPlayer()->GetName());
+            ChatHandler(handler->GetSession()).PSendSysMessage("No puedes reclutar a |cff4CFF00%s|r porque te han reclutado.", target->GetConnectedPlayer()->GetName());
             return true;
         }
 
         if (!IsReferralValid(recruitedAccountId) && rafAge > 0)
         {
-            ChatHandler(handler->GetSession()).PSendSysMessage("You can't recruit |cffFF0000%s|r because their account was created more than %i days ago.", target->GetConnectedPlayer()->GetName(), rafAge);
+            ChatHandler(handler->GetSession()).PSendSysMessage("No puedes reclutar a |cffFF0000%s|r porque su cuenta ha sido creada hace mas de %i dias atras.", target->GetConnectedPlayer()->GetName(), rafAge);
             return true;
         }
 
         if (IsReferralPending(recruitedAccountId))
         {
-            ChatHandler(handler->GetSession()).PSendSysMessage("You can't recruit |cffFF0000%s|r because they already have a pending request.", target->GetConnectedPlayer()->GetName());
+            ChatHandler(handler->GetSession()).PSendSysMessage("No puedes reclutar a |cffFF0000%s|r porque ya tienen una solicitud pendiente.", target->GetConnectedPlayer()->GetName());
             return true;
         }
 
         LoginDatabase.Execute("INSERT INTO `recruit_a_friend_accounts` (`account_id`, `recruiter_id`, `status`) VALUES ({}, {}, {})", recruitedAccountId, recruiterAccountId, STATUS_REFERRAL_PENDING);
-        ChatHandler(handler->GetSession()).PSendSysMessage("You have sent a referral request to |cff4CFF00%s|r.", target->GetConnectedPlayer()->GetName());
-        ChatHandler(handler->GetSession()).SendSysMessage("The player has to |cff4CFF00accept|r, or |cff4CFF00decline|r, the pending request.");
-        ChatHandler(handler->GetSession()).SendSysMessage("If they accept the request, you have to log out and back in for the changes to take effect.");
+        ChatHandler(handler->GetSession()).PSendSysMessage("Has enviado una solicitud de reclutamiento a |cff4CFF00%s|r.", target->GetConnectedPlayer()->GetName());
+        ChatHandler(handler->GetSession()).SendSysMessage("El jugador debe |cff4CFF00aceptar|r, o |cff4CFF00declinar|r, la solicitud pendiente.");
+        ChatHandler(handler->GetSession()).SendSysMessage("Si aceptan la solicitud, debe cerrar la sesión y volver a iniciarla para que los cambios surtan efecto.");
 
-        ChatHandler(target->GetConnectedPlayer()->GetSession()).PSendSysMessage("|cff4CFF00%s|r has sent you a referral request.", handler->GetPlayer()->GetName());
-        ChatHandler(target->GetConnectedPlayer()->GetSession()).SendSysMessage("Use |cff4CFF00.recruit accept|r to accept or |cff4CFF00.recruit decline|r to decline the request.");
+        ChatHandler(target->GetConnectedPlayer()->GetSession()).PSendSysMessage("|cff4CFF00%s|r te ha enviado una solicitud de reclutamiento.", handler->GetPlayer()->GetName());
+        ChatHandler(target->GetConnectedPlayer()->GetSession()).SendSysMessage("Usa |cff4CFF00.reclutar aceptar|r para aceptar or |cff4CFF00.reclutar declinar|r para declinar la solicitud.");
         return true;
     }
 
     static bool HandleRecruitHelpCommand(ChatHandler* handler)
     {
-        ChatHandler(handler->GetSession()).SendSysMessage("You can recruit a friend using |cff4CFF00.recruit friend <name>|r.");
-        ChatHandler(handler->GetSession()).SendSysMessage("You can accept a pending request using |cff4CFF00.recruit accept|r.");
-        ChatHandler(handler->GetSession()).SendSysMessage("You can decline a pending request using |cff4CFF00.recruit decline|r.");
-        ChatHandler(handler->GetSession()).PSendSysMessage("You will both receive a bonus to experience and reputation up to level %i.", sWorld->getIntConfig(CONFIG_MAX_RECRUIT_A_FRIEND_BONUS_PLAYER_LEVEL));
+        ChatHandler(handler->GetSession()).SendSysMessage("Puedes reclutar un amigo usando |cff4CFF00.reclutar amigo <nombre>|r.");
+        ChatHandler(handler->GetSession()).SendSysMessage("Puedes aceptar una solicitud pendiente con |cff4CFF00.reclutar aceptar|r.");
+        ChatHandler(handler->GetSession()).SendSysMessage("Puedes declinar una solicitud pendiente con |cff4CFF00.reclutar declinar|r.");
+        ChatHandler(handler->GetSession()).PSendSysMessage("Ambos recibiran un bonus de experiencia y reputacion hasta el nivel %i.", sWorld->getIntConfig(CONFIG_MAX_RECRUIT_A_FRIEND_BONUS_PLAYER_LEVEL));
 
         if (rafDuration > 0)
         {
-            ChatHandler(handler->GetSession()).PSendSysMessage("The recruit a friend benefits will expire after %i days.", rafDuration);
+            ChatHandler(handler->GetSession()).PSendSysMessage("El reclutamiento expira luego de %i dias.", rafDuration);
         }
         else
         {
-            ChatHandler(handler->GetSession()).SendSysMessage("The recruit a friend benefits will never expire.");
+            ChatHandler(handler->GetSession()).SendSysMessage("El reclutamiento nunca expira.");
         }
 
-        ChatHandler(handler->GetSession()).SendSysMessage("You can see the status of your referral using |cff4CFF00.recruit status|r.");
+        ChatHandler(handler->GetSession()).SendSysMessage("Puedes ver el estado del reclutamiento usando |cff4CFF00.reclutar estado|r.");
         return true;
     }
 
@@ -183,27 +183,27 @@ public:
 
             if (status == STATUS_REFERRAL_EXPIRED)
             {
-                ChatHandler(handler->GetSession()).PSendSysMessage("You were recruited at |cff4CFF00%s|r and it expired at |cffFF0000%s|r.", referralDate, expirationDate);
+                ChatHandler(handler->GetSession()).PSendSysMessage("Fuiste reclutado el |cff4CFF00%s|r y expiro el |cffFF0000%s|r.", referralDate, expirationDate);
             }
             else if (status == STATUS_REFERRAL_ACTIVE)
             {
                 if (rafDuration > 0)
                 {
-                    ChatHandler(handler->GetSession()).PSendSysMessage("You were recruited at |cff4CFF00%s|r and it will expire at |cffFF0000%s|r.", referralDate, expirationDate);
+                    ChatHandler(handler->GetSession()).PSendSysMessage("Fuiste reclutado el |cff4CFF00%s|r y expira el |cffFF0000%s|r.", referralDate, expirationDate);
                 }
                 else
                 {
-                    ChatHandler(handler->GetSession()).PSendSysMessage("You were recruited at |cff4CFF00%s|r and it will |cffFF0000never|r expire.", referralDate, expirationDate);
+                    ChatHandler(handler->GetSession()).PSendSysMessage("Fuiste reclutado el |cff4CFF00%s|r y |cffFF0000nunca|r expira.", referralDate, expirationDate);
                 }
             }
             else
             {
-                ChatHandler(handler->GetSession()).SendSysMessage("You have not been recruited but have a |cff4CFF00pending|r request.");
+                ChatHandler(handler->GetSession()).SendSysMessage("No has sido reclutado pero tienes una solicitud |cff4CFF00pendiente|r para aceptar/declinar.");
             }
         }
         else
         {
-            ChatHandler(handler->GetSession()).PSendSysMessage("You have |cffFF0000not|r been referred.");
+            ChatHandler(handler->GetSession()).PSendSysMessage("|cffFF0000No|r has sido reclutado.");
         }
 
         return true;
@@ -264,8 +264,8 @@ public:
 
     void OnLogin(Player* player) override
     {
-        ChatHandler(player->GetSession()).PSendSysMessage("This server allows the use of the recruit a friend feature.");
-        ChatHandler(player->GetSession()).PSendSysMessage("Use the command |cff4CFF00.recruit help|r to get started.");
+        ChatHandler(player->GetSession()).PSendSysMessage("Recluta-Un-Amigo <WoWSur> Este servidor permite reclutar a tu amigo para obtener bonus de experiencia y reputacion.");
+        ChatHandler(player->GetSession()).PSendSysMessage("Recluta-Un-Amigo <WoWSur> Usa el comando |cff4CFF00.reclutar ayuda|r para empezar.");
 
         if (rafRewardDays > 0)
         {
@@ -276,13 +276,13 @@ public:
                 return;
 
             if (rafRewardSwiftZhevra)
-                SendMailTo(player, "Swift Zhevra", "I found this stray Zhevra walking around The Barrens, aimlessly. I figured you, if anyone, could give it a good home!", 37719, 1);
+                SendMailTo(player, "Swift Zhevra", "Encontré a esta Zhevra perdida caminando por Los Baldíos, sin rumbo fijo. ¡Pensé que tú, si alguien, podría darle un buen hogar!", 37719, 1);
 
             if (rafRewardTouringRocket)
-                SendMailTo(player, "X-53 Touring Rocket", "This rocket was found flying around Northrend, with what seemed like no purpose. Perhaps you could put it to good use?", 54860, 1);
+                SendMailTo(player, "X-53 Touring Rocket", "Este cohete fue encontrado volando alrededor de Rasganorte, aparentemente sin ningún propósito. ¿Quizás podrías darle un buen uso?", 54860, 1);
 
             if (rafRewardCelestialSteed)
-                SendMailTo(player, "Celestial Steed", "A strange steed was found roaming Northrend, phasing in and out of existence. I figured you would be interested in such a companion.", 54811, 1);
+                SendMailTo(player, "Celestial Steed", "Se encontró un extraño corcel vagando por Rasganorte, apareciendo y desapareciendo gradualmente. Supuse que estarías interesado en un compañero así.", 54811, 1);
 
 
             LoginDatabase.Execute("INSERT INTO `recruit_a_friend_rewarded` (`account_id`, `realm_id`, `character_guid`) VALUES ({}, {}, {})", player->GetSession()->GetAccountId(), rafRealmId, player->GetGUID().GetCounter());
