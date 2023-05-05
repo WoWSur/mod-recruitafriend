@@ -265,7 +265,7 @@ public:
     void OnLogin(Player* player) override
     {
         ChatHandler(player->GetSession()).PSendSysMessage("Recluta-Un-Amigo <WoWSur> Este servidor permite reclutar a tu amigo para obtener bonus de experiencia y reputacion.");
-        ChatHandler(player->GetSession()).PSendSysMessage("Recluta-Un-Amigo <WoWSur> Usa el comando |cff4CFF00.reclutar ayuda|r para empezar.");
+        ChatHandler(player->GetSession()).PSendSysMessage("Usa el comando |cff4CFF00.reclutar ayuda|r para empezar.");
 
         if (rafRewardDays > 0)
         {
